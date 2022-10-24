@@ -14,23 +14,24 @@ def add_filter(image):
     pass
 if __name__ == "__main__":
     root = tk.Tk()
-    root.minsize()
-
     gui = GUI(root)
-
 
     cap = cv2.VideoCapture(1)
     while cap.isOpened():
         ret, frame = cap.read()
 
-        # filter function implier goes here
-
         # cv2.imshow('Photo Booth', frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         # frame = add_filter(frame)
         frame_np = np.array(frame)
-        print(frame_np.shape)
-        break
+
+        # filter function implier goes here
+        gui.frame = frame_np
+        gui.call_function()
+        frame = gui.frame
+        # gui.f1_command(frame)
+
+
         img_update = ImageTk.PhotoImage(Image.fromarray(frame))
         gui.panel_image.configure(image=img_update)
         gui.panel_image.image = img_update
@@ -44,5 +45,3 @@ if __name__ == "__main__":
 
 
     root.mainloop()
-
-
