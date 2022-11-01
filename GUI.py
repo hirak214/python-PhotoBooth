@@ -7,6 +7,11 @@ import cv2
 from scipy.interpolate import UnivariateSpline
 from skimage.color import rgb2gray
 import matplotlib.pyplot as plt
+from scipy import signal
+from progressbar import ProgressBar
+
+from playsound import playsound
+
 
 
 class GUI:
@@ -16,19 +21,23 @@ class GUI:
         self.frame = 0
         # setting title
         root.title("Photo Booth")
-        # setting window size
-        root.geometry(f"{root.winfo_screenwidth()}x{root.winfo_screenheight()}")
 
-        screenwidth = root.winfo_screenwidth()
-        screenheight = root.winfo_screenheight()
+        screenwidth = int(root.winfo_screenwidth())
+        screenheight = int(root.winfo_screenheight())
         print(screenwidth, screenheight)
+        # setting window size
+        root.geometry(f"{screenwidth}x{screenwidth}")
 
-        button_x_pos = int(screenwidth - 400)
+        button_x_pos = int(screenwidth - 500)
         # alignstr = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
         # root.geometry(alignstr)
         # root.resizable(width=False, height=False)
 
         font = tkFont.Font(family='Arial', size=16)
+        width_var = 200
+        height_var = 50
+
+        v1 = tk.IntVar()
 
         f1 = tk.Button(root)
         f1["bg"] = "#efefef"
@@ -36,7 +45,7 @@ class GUI:
         f1["fg"] = "#000000"
         f1["justify"] = "center"
         f1["text"] = "Invert"
-        f1.place(x=button_x_pos, y=100, width=150, height=60)
+        f1.place(x=button_x_pos, y=100, width=width_var, height=height_var)
         f1["command"] = self.f1_command
 
         f2 = tk.Button(root)
@@ -45,7 +54,7 @@ class GUI:
         f2["fg"] = "#000000"
         f2["justify"] = "center"
         f2["text"] = "Blurring"
-        f2.place(x=button_x_pos, y=200, width=150, height=60)
+        f2.place(x=button_x_pos, y=200, width=width_var, height=height_var)
         f2["command"] = self.f2_command
 
         f3 = tk.Button(root)
@@ -54,7 +63,7 @@ class GUI:
         f3["fg"] = "#000000"
         f3["justify"] = "center"
         f3["text"] = "Thresholding"
-        f3.place(x=button_x_pos, y=300, width=150, height=60)
+        f3.place(x=button_x_pos, y=300, width=width_var, height=height_var)
         f3["command"] = self.f3_command
 
         f4 = tk.Button(root)
@@ -62,8 +71,8 @@ class GUI:
         f4["font"] = font
         f4["fg"] = "#000000"
         f4["justify"] = "center"
-        f4["text"] = "Grey"
-        f4.place(x=button_x_pos, y=400, width=150, height=60)
+        f4["text"] = "Sketch"
+        f4.place(x=button_x_pos, y=400, width=width_var, height=height_var)
         f4["command"] = self.f4_command
 
         f5 = tk.Button(root)
@@ -71,8 +80,8 @@ class GUI:
         f5["font"] = font
         f5["fg"] = "#000000"
         f5["justify"] = "center"
-        f5["text"] = "Image Segmentation"
-        f5.place(x=button_x_pos, y=500, width=150, height=60)
+        f5["text"] = "Sharpening"
+        f5.place(x=button_x_pos, y=500, width=width_var, height=height_var)
         f5["command"] = self.f5_command
 
         f6 = tk.Button(root)
@@ -80,8 +89,8 @@ class GUI:
         f6["font"] = font
         f6["fg"] = "#000000"
         f6["justify"] = "center"
-        f6["text"] = "Sharpening"
-        f6.place(x=button_x_pos, y=600, width=150, height=60)
+        f6["text"] = "Revert"
+        f6.place(x=button_x_pos, y=600, width=width_var, height=height_var)
         f6["command"] = self.f6_command
 
         click_bt = tk.Button(root)
@@ -97,78 +106,72 @@ class GUI:
         self.panel_image = tk.Label(root)  # ,image=img)
         self.panel_image.place(x=10, y=10, width=1080, height=720)
 
+        s1 = tk.Scale(root, variable=v1, from_=1, to=100, orient=tk.HORIZONTAL)
+
+        l3 = tk.Label(root, text="Threshold Scaler")
+
+        s1.place(x=button_x_pos, y=700)
+        l3.place(x=button_x_pos, y=720)
+
     def f1_command(self):
         self.clicked_button = 1
-
-        # #sepia
-        # img_sepia = np.array(self.frame, dtype=np.float64)  # converting to float to prevent loss
-        # img_sepia = cv2.transform(img_sepia, np.matrix([[0.272, 0.534, 0.131],
-        #                                                 [0.349, 0.686, 0.168],
-        #                                                 [0.393, 0.769,
-        #                                                  0.189]]))  # multipying image with special sepia matrix
-        # img_sepia[np.where(img_sepia > 255)] = 255  # normalizing values greater than 255 to 255
-        # self.frame = np.array(img_sepia, dtype=np.uint8)
-
-        # # sketch
-        # sk_gray, self.frame = cv2.pencilSketch(self.frame, sigma_s=60, sigma_r=0.07, shade_factor=0.1)
-
-        # #HDR
-        # self.frame = cv2.detailEnhance(self.frame, sigma_s=12, sigma_r=0.15)
-
-        #invert
         self.frame = cv2.bitwise_not(self.frame)
-
-        # def LookupTable(x, y):
-        #     spline = UnivariateSpline(x, y)
-        #     return spline(range(256))
-        # #summer
-        # increaseLookupTable = LookupTable([0, 64, 128, 256], [0, 80, 160, 256])
-        # decreaseLookupTable = LookupTable([0, 64, 128, 256], [0, 50, 100, 256])
-        # blue_channel, green_channel, red_channel = cv2.split(self.frame)
-        # red_channel = cv2.LUT(red_channel, increaseLookupTable).astype(np.uint8)
-        # blue_channel = cv2.LUT(blue_channel, decreaseLookupTable).astype(np.uint8)
-        # self.frame = cv2.merge((blue_channel, green_channel, red_channel))
 
     def f2_command(self):
         self.clicked_button = 2
-        self.frame = cv2.blur(self.frame, (20, 20))
-
+        mask = np.ones([10, 10], dtype=int)
+        mask = mask / 100
+        self.frame = signal.convolve2d(self.frame, mask)
 
     def f3_command(self):
+        #  thresholding
         self.clicked_button = 3
-        ret, self.frame = cv2.threshold(self.frame, 127, 255, cv2.THRESH_BINARY)
+        r, c = self.frame.shape
+        T = 128
+        for i in range(r):
+            for j in range(c):
+                if self.frame[i, j] > T:
+                    self.frame[i, j] = self.frame.max()
+                else:
+                    self.frame[i, j] = 0
 
     def f4_command(self):
+        # edge detection
         self.clicked_button = 4
-        self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        mask_horizontal = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
+        horizontal = cv2.filter2D(self.frame, -1, mask_horizontal)
+
+        mask_vertical = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+        vertical = cv2.filter2D(self.frame, -1, mask_vertical)
+
+        mask_forwarddiagonal = np.array([[-2, -1, 0], [-1, 0, 1], [0, 1, 2]])
+        forwarddiagonal= cv2.filter2D(self.frame, -1, mask_forwarddiagonal)
+
+        mask_backworddiagonal = np.array([[0, -1, -2], [1, 0, -1], [2, 1, 0]])
+        backwarddiagonal = cv2.filter2D(self.frame, -1, mask_backworddiagonal)
+
+        self.frame = horizontal + vertical + forwarddiagonal + backwarddiagonal
+
+
 
 
     def f5_command(self):
         self.clicked_button = 5
-        gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        # apply thresholding
-        ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-        # get a kernel
-        kernel = np.ones((3, 3), np.uint8)
-        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=2)
-        # extract the background from image
-        sure_bg = cv2.dilate(opening, kernel, iterations=3)
-
-        dist_transform = cv2.distanceTransform(opening, cv2.DIST_L2, 5)
-        ret, sure_fg = cv2.threshold(dist_transform, 0.7 * dist_transform.max(), 255, 0)
-
-        sure_fg = np.uint8(sure_fg)
-        self.frame = sure_bg
-
+        kernel = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
+        self.frame = cv2.filter2D(self.frame, -1, kernel)
 
     def f6_command(self):
         self.clicked_button = 6
-        kernel = np.array([[-1, -1, -1], [-1, 9.5, -1], [-1, -1, -1]])
-        self.frame = cv2.filter2D(self.frame, -1, kernel)
-
+        self.frame = self.frame
 
     def click_bt_command(self):
         cv2.imwrite(f"images/Image{random.randint(1, 100)}.png", self.frame)
+        playsound('click.wav')
+
+
+    def show1(self):
+        sel = "Horizontal Scale Value = " + str(v1.get())
+        l1.config(text=sel, font=("Courier", 14))
 
     def call_function(self):
         if self.clicked_button == 1: self.f1_command()

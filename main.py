@@ -9,9 +9,6 @@ import numpy as np
 
 from GUI import *
 
-
-def add_filter(image):
-    pass
 if __name__ == "__main__":
     root = tk.Tk()
     gui = GUI(root)
@@ -21,18 +18,15 @@ if __name__ == "__main__":
         ret, frame = cap.read()
 
         # cv2.imshow('Photo Booth', frame)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        # frame = add_filter(frame)
-        frame_np = np.array(frame)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        frame = cv2.flip(frame, 1)
+
+        gui.frame = np.array(frame)
 
         # filter function implier goes here
-        gui.frame = frame_np
         gui.call_function()
-        frame = gui.frame
-        # gui.f1_command(frame)
 
-
-        img_update = ImageTk.PhotoImage(Image.fromarray(frame))
+        img_update = ImageTk.PhotoImage(Image.fromarray(gui.frame))
         gui.panel_image.configure(image=img_update)
         gui.panel_image.image = img_update
         gui.panel_image.update()
